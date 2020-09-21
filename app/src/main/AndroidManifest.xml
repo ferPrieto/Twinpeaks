@@ -3,21 +3,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="prieto.fernando.spacex">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
+        android:name="prieto.fernando.twinpeaks.TwinpeaksApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:name="prieto.fernando.twinpeaks.TwinpeaksApp"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
-        <activity android:name="prieto.fernando.twinpeaks.ui.MainActivity"
+        <activity
+            android:name="prieto.fernando.twinpeaks.ui.MainActivity"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>

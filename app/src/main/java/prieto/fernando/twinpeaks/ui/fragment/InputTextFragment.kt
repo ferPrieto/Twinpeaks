@@ -10,6 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
+import kotlinx.android.synthetic.main.fragment_input_text.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.view_bottom.*
 import prieto.fernando.presentation.MainViewModel
@@ -28,6 +29,14 @@ class InputTextFragment @Inject constructor(
         setViewModelObservers()
         setUpClickListeners()
     }
+
+    override fun onResume() {
+        super.onResume()
+        camera_view.postDelayed({
+            camera_view.systemUiVisibility = FLAGS_FULLSCREEN
+        }, IMMERSIVE_FLAG_TIMEOUT)
+    }
+
 
     private fun setupNavigation() {
         requireActivity().let { fragmentActivity ->
@@ -66,5 +75,17 @@ class InputTextFragment @Inject constructor(
         record_button.setOnClickListener {
 
         }
+    }
+
+    companion object {
+        const val FLAGS_FULLSCREEN =
+            View.SYSTEM_UI_FLAG_LOW_PROFILE or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+
+        const val ANIMATION_FAST_MILLIS = 50L
+        const val ANIMATION_SLOW_MILLIS = 100L
+        private const val IMMERSIVE_FLAG_TIMEOUT = 500L
     }
 }

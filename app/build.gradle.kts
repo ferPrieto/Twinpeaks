@@ -3,6 +3,7 @@ import prieto.fernando.android.plugin.BuildType
 plugins {
     id("com.android.application")
     id("prieto.fernando.android.plugin")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 androidPlugin {
@@ -30,11 +31,7 @@ android {
 
 dependencies {
     implementation(project(ProjectModules.core))
-    implementation(project(ProjectModules.navigation))
-    implementation(project(ProjectModules.api))
     implementation(project(ProjectModules.presentation))
-    implementation(project(ProjectModules.domain))
-    implementation(project(ProjectModules.data))
     androidTestImplementation(project(ProjectModules.coreAndroidTest))
     testImplementation(project(ProjectModules.coreAndroidTest))
 
@@ -43,6 +40,8 @@ dependencies {
     implementation(Dependencies.AndroidX.lifecycleLivedataKtx)
     annotationProcessor(Dependencies.AndroidX.lifecycleCompiler)
     implementation(Dependencies.AndroidX.archComponents)
+    implementation(Dependencies.AndroidX.Camera.cameraCore)
+    implementation(Dependencies.AndroidX.Camera.camera2)
 
     implementation(Dependencies.AndroidX.constraintlayout)
     implementation(Dependencies.AndroidX.legacySupport)

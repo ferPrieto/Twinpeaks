@@ -19,7 +19,8 @@ object AndroidSettings {
 
 object Versions {
     const val appCompat = "1.1.0"
-    const val navigation = "2.1.0"
+    const val navigation = "2.3.0"
+    const val camera = "1.0.0-beta09"
     const val constraintLayout = "1.1.3"
     const val legacySupportV4 = "1.0.0"
     const val lifecycleLivedataKtx = "2.2.0-rc01"
@@ -33,7 +34,7 @@ object Versions {
     const val mockito = "2.27.0"
     const val mockitoKotlin = "1.5.0"
     const val gradle = "3.5.1"
-    const val kotlin = "1.3.60"
+    const val kotlin = "1.4.10"
     const val timber = "4.7.1"
     const val coreTesting = "1.1.1"
     const val retrofit = "2.6.2"
@@ -51,6 +52,9 @@ object BuildDependencies {
         "com.android.tools.build:gradle:${Versions.gradle}"
     const val kotlinGradlePlugin =
         "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
+    const val navigationSafeArgsPlugin =
+        "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.navigation}"
+
 }
 
 object Dependencies {
@@ -72,13 +76,17 @@ object Dependencies {
             "androidx.lifecycle:lifecycle-viewmodel:${Versions.lifecycleLivedataKtx}"
         const val archComponents =
             "androidx.lifecycle:lifecycle-extensions:${Versions.lifecycleLivedataKtx}"
-        const val browser = "androidx.browser:browser:${Versions.browser}"
 
         object Navigation {
             const val fragmentKtx =
                 "androidx.navigation:navigation-fragment-ktx:${Versions.navigation}"
             const val uiKtx =
                 "androidx.navigation:navigation-ui-ktx:${Versions.navigation}"
+        }
+
+        object Camera {
+            const val cameraCore = "androidx.camera:camera-core:${Versions.camera}"
+            const val camera2 = "androidx.camera:camera-camera2:${Versions.camera}"
         }
     }
 

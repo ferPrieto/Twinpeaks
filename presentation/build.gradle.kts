@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation(project(ProjectModules.domain))
     implementation(project(ProjectModules.core))
     testImplementation(project(ProjectModules.coreAndroidTest))
 
