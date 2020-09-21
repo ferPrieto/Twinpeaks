@@ -38,15 +38,11 @@ dependencies {
     androidTestImplementation(project(ProjectModules.coreAndroidTest))
     testImplementation(project(ProjectModules.coreAndroidTest))
 
+    implementation(Dependencies.AndroidX.coreKtx)
     implementation(Dependencies.AndroidX.fragmentKtx)
     implementation(Dependencies.AndroidX.lifecycleLivedataKtx)
     annotationProcessor(Dependencies.AndroidX.lifecycleCompiler)
     implementation(Dependencies.AndroidX.archComponents)
-    implementation(Dependencies.AndroidX.browser)
-    implementation(Dependencies.solidRecyclerView)
-
-    implementation(Dependencies.picasso)
-    implementation(Dependencies.bottomSheet)
 
     implementation(Dependencies.AndroidX.constraintlayout)
     implementation(Dependencies.AndroidX.legacySupport)

@@ -39,13 +39,11 @@ object Versions {
     const val retrofit = "2.6.2"
     const val retrofitConverterGson = "2.4.0"
     const val okhttpLoggingInterceptor = "4.2.1"
-    const val picasso = "2.71828"
-    const val bottomSheet = "0.1.9"
     const val jodaTime = "2.10.5"
     const val mockWebServer = "4.2.1"
     const val browser = "1.0.0"
-    const val solidRecyclerView = "1.0.2"
     const val kotlinxCoroutines = "1.3.2"
+    const val exoPlayer = "2.12.0"
 }
 
 object BuildDependencies {
@@ -87,6 +85,8 @@ object Dependencies {
     const val kotlinxCoroutines =
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}"
 
+    const val exoPlayer = "com.google.android.exoplayer:exoplayer:${Versions.exoPlayer}"
+
     object Dagger {
         const val dagger =
             "com.google.dagger:dagger:${Versions.dagger}"
@@ -111,14 +111,8 @@ object Dependencies {
     const val okHttpLoggingInterceptor =
         "com.squareup.okhttp3:logging-interceptor:${Versions.okhttpLoggingInterceptor}"
 
-    const val picasso = "com.squareup.picasso:picasso:${Versions.picasso}"
-
-    const val bottomSheet =
-        "com.qhutch.bottomsheetlayout:bottomsheetlayout:${Versions.bottomSheet}"
-
     const val jodaTime = "joda-time:joda-time:${Versions.jodaTime}"
 
-    const val solidRecyclerView = "com.mitteloupe.solid:solidrecyclerview:${Versions.solidRecyclerView}"
 }
 
 object TestDependencies {

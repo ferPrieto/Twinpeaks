@@ -2,24 +2,30 @@
 package prieto.fernando.presentation;
 
 import dagger.internal.Factory;
+import javax.inject.Provider;
+import prieto.fernando.presentation.mapper.TextReverser;
 
 @SuppressWarnings({
     "unchecked",
     "rawtypes"
 })
 public final class MainViewModelImpl_Factory implements Factory<MainViewModelImpl> {
-  private static final MainViewModelImpl_Factory INSTANCE = new MainViewModelImpl_Factory();
+  private final Provider<TextReverser> textReverserProvider;
+
+  public MainViewModelImpl_Factory(Provider<TextReverser> textReverserProvider) {
+    this.textReverserProvider = textReverserProvider;
+  }
 
   @Override
   public MainViewModelImpl get() {
-    return new MainViewModelImpl();
+    return new MainViewModelImpl(textReverserProvider.get());
   }
 
-  public static MainViewModelImpl_Factory create() {
-    return INSTANCE;
+  public static MainViewModelImpl_Factory create(Provider<TextReverser> textReverserProvider) {
+    return new MainViewModelImpl_Factory(textReverserProvider);
   }
 
-  public static MainViewModelImpl newInstance() {
-    return new MainViewModelImpl();
+  public static MainViewModelImpl newInstance(TextReverser textReverser) {
+    return new MainViewModelImpl(textReverser);
   }
 }

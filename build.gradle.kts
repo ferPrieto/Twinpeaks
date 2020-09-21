@@ -13,7 +13,6 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven("https://dl.bintray.com/shadowcra/Solid")
     }
 }
 

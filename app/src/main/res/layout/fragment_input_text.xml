@@ -23,7 +23,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <include
-        android:id="@+id/bottom_sheet_container"
+        android:id="@+id/bottom_views_container"
         layout="@layout/view_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
