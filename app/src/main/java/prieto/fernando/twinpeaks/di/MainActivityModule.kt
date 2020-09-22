@@ -8,10 +8,10 @@ import dagger.android.ContributesAndroidInjector
 import dagger.multibindings.IntoMap
 import prieto.fernando.core.di.FragmentKey
 import prieto.fernando.core.di.ViewModelKey
-import prieto.fernando.presentation.MainViewModel
-import prieto.fernando.presentation.MainViewModelImpl
+import prieto.fernando.presentation.CaptureVideoViewModel
+import prieto.fernando.presentation.CaptureVideoModelImpl
 import prieto.fernando.twinpeaks.ui.MainActivity
-import prieto.fernando.twinpeaks.ui.fragment.InputTextFragment
+import prieto.fernando.twinpeaks.ui.fragment.CaptureVideoFragment
 
 @Module
 internal abstract class MainActivityModule {
@@ -21,11 +21,11 @@ internal abstract class MainActivityModule {
 
     @Binds
     @IntoMap
-    @FragmentKey(InputTextFragment::class)
-    abstract fun inputTextFragment(inputTextFragment: InputTextFragment): Fragment
+    @FragmentKey(CaptureVideoFragment::class)
+    abstract fun captureVideoFragment(captureVideoFragment: CaptureVideoFragment): Fragment
 
     @Binds
     @IntoMap
-    @ViewModelKey(MainViewModel::class)
-    abstract fun inputTextViewModel(viewModel: MainViewModelImpl): ViewModel
+    @ViewModelKey(CaptureVideoViewModel::class)
+    abstract fun captureVideoViewModel(viewModel: CaptureVideoModelImpl): ViewModel
 }

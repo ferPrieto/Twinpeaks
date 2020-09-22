@@ -8,7 +8,7 @@ import kotlinx.coroutines.FlowPreview
 import prieto.fernando.presentation.mapper.TextReverser
 import javax.inject.Inject
 
-abstract class MainViewModel : ViewModel() {
+abstract class CaptureVideoViewModel : ViewModel() {
     abstract fun reverseText(textSelected: String)
     abstract fun recordVideoClicked()
 
@@ -18,9 +18,9 @@ abstract class MainViewModel : ViewModel() {
 
 @ExperimentalCoroutinesApi
 @FlowPreview
-class MainViewModelImpl @Inject constructor(
+class CaptureVideoModelImpl @Inject constructor(
     private val textReverser: TextReverser
-) : MainViewModel() {
+) : CaptureVideoViewModel() {
     override val reversedText = MutableLiveData<String>()
     override val recordVideo = MutableLiveData<Unit>()
 

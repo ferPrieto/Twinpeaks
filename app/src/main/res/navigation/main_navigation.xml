@@ -19,6 +19,6 @@
 
     <fragment
         android:id="@+id/inputTextFragment"
-        android:name="prieto.fernando.twinpeaks.ui.fragment.InputTextFragment" />
+        android:name="prieto.fernando.twinpeaks.ui.fragment.CaptureVideoFragment" />
 
 </navigation>
