@@ -2,7 +2,6 @@ package prieto.fernando.twinpeaks.ui.fragment
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.hardware.camera2.*
@@ -17,9 +16,7 @@ import android.util.Log
 import android.util.Range
 import android.util.Size
 import android.view.*
-import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -29,6 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
+import com.arthenica.mobileffmpeg.*
 import kotlinx.android.synthetic.main.fragment_capture_video.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.view_bottom.*
@@ -36,10 +34,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.apache.commons.io.comparator.LastModifiedFileComparator
 import prieto.fernando.presentation.CaptureVideoViewModel
-import prieto.fernando.spacex.BuildConfig
 import prieto.fernando.spacex.R
-import prieto.fernando.twinpeaks.ui.MainActivity
+import prieto.fernando.twinpeaks.ui.fragment.VideoSteps.*
 import prieto.fernando.twinpeaks.utils.getPreviewOutputSize
 import java.io.File
 import java.text.SimpleDateFormat
@@ -49,7 +47,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-private const val TAG = "InputTextFragment"
+private const val TAG = "CaptureVideoFragment"
+const val ANIMATION_FAST_MILLIS = 50L
+private const val IMMERSIVE_FLAG_TIMEOUT = 500L
+private const val RECORDER_VIDEO_BITRATE: Int = 10_000_000
+private const val MIN_REQUIRED_RECORDING_TIME_MILLIS: Long = 1000L
 
 class CaptureVideoFragment @Inject constructor(
     viewModelFactory: ViewModelProvider.Factory
@@ -121,6 +123,12 @@ class CaptureVideoFragment @Inject constructor(
     private val cameraThread = HandlerThread("CameraThread").apply { start() }
 
     private val cameraHandler = Handler(cameraThread.looper)
+
+    private lateinit var lastReverseCommand: Array<String>
+
+    private var choice = Initial
+
+    private var filePath: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -306,26 +314,181 @@ class CaptureVideoFragment @Inject constructor(
                         view.context, arrayOf(outputFile.absolutePath), null, null
                     )
 
-                    // TODO: Showing the video in the same app
-                    // Launch external activity via intent to play video recorded using our provider
-                    startActivity(Intent().apply {
-                        action = Intent.ACTION_VIEW
-                        type = MimeTypeMap.getSingleton()
-                            .getMimeTypeFromExtension(outputFile.extension)
-                        val authority = "${BuildConfig.APPLICATION_ID}.provider"
-                        data = FileProvider.getUriForFile(view.context, authority, outputFile)
-                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    })
-
-                    // Finishes our current camera screen
-                    delay(MainActivity.ANIMATION_SLOW_MILLIS)
-                    findNavController().popBackStack()
+                    choice = Split
+                    splitVideoCommand(outputFile.absolutePath)
                 }
             }
 
             true
         }
+    }
+
+    private fun splitVideoCommand(path: String) {
+        val filePrefix = "split_video"
+        val fileExtension = ".mp4"
+        val dir = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
+        if (dir.exists()) deleteDir(dir)
+        dir.mkdir()
+        val dest = File(dir, "$filePrefix%03d$fileExtension")
+        val complexCommand = arrayOf(
+            "-i",
+            path,
+            "-c:v",
+            "libx264",
+            "-crf",
+            "22",
+            "-map",
+            "0",
+            "-segment_time",
+            "6",
+            "-g",
+            "9",
+            "-sc_threshold",
+            "0",
+            "-force_key_frames",
+            "expr:gte(t,n_forced*6)",
+            "-f",
+            "segment",
+            dest.absolutePath
+        )
+        execFFmpegBinary(complexCommand)
+    }
+
+    private fun reverseVideoCommand() {
+        val srcDir = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
+        val filePrefix = "reverse_video"
+        val fileExtension = ".mp4"
+        val destDir = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
+        if (destDir.exists()) deleteDir(destDir)
+        destDir.mkdir()
+        val listFiles = srcDir.listFiles()
+        listFiles.map { file ->
+            val dest = File(destDir, filePrefix + listFiles.indexOf(file) + fileExtension)
+            val command = arrayOf(
+                "-i",
+                file.absolutePath,
+                "-vf",
+                "reverse",
+                "-af",
+                "areverse",
+                dest.absolutePath
+            )
+            if (file == listFiles.last()) lastReverseCommand = command
+            execFFmpegBinary(command)
+        }
+    }
+
+    private fun execFFmpegBinary(command: Array<String>) {
+        Config.setLogLevel(Level.AV_LOG_TRACE)
+
+        Config.enableLogCallback { message: LogMessage -> Log.e(TAG, message.text) }
+
+        Config.enableStatisticsCallback { newStatistics: Statistics ->
+            Log.e(
+                Config.TAG,
+                String.format(
+                    "frame: %d, time: %d",
+                    newStatistics.videoFrameNumber,
+                    newStatistics.time
+                )
+            )
+            Log.d(TAG, "Started command : ffmpeg " + command.contentToString())
+            when (choice) {
+                Split -> Log.d(TAG, "progress : splitting video $newStatistics")
+                Reverse -> Log.d(TAG, "progress : reversing splitted videos $newStatistics")
+                Concatenate -> Log.d(TAG, "progress : concatenating reversed videos $newStatistics")
+                else -> Log.d(TAG, "progress : $newStatistics")
+            }
+            Log.d(TAG, "progress : $newStatistics")
+        }
+        Log.d(TAG, "Started command : ffmpeg $command")
+        val executionId = FFmpeg.executeAsync(
+            command
+        ) { _: Long, returnCode: Int ->
+            if (returnCode == Config.RETURN_CODE_SUCCESS) {
+                Log.d(TAG, "Finished command : ffmpeg " + command.contentToString())
+                when (choice) {
+                    Split -> reverseAndUpdateFlag()
+                    End -> finishCameraScreen()
+                    else -> if (command.contentEquals(lastReverseCommand)) {
+                        concatenateVideoAndUpdateFlag(command)
+                    }
+                }
+            }
+        }
+        Log.e(TAG, "execFFmpegMergeVideo executionId-$executionId")
+    }
+
+    private fun reverseAndUpdateFlag() {
+        choice = Reverse
+        reverseVideoCommand()
+    }
+
+
+    private fun finishCameraScreen() {
+        val reversePath = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
+        val splitPath = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
+
+        if (reversePath.exists()) deleteDir(reversePath)
+        if (splitPath.exists()) deleteDir(splitPath)
+
+        Log.e(TAG, "Directories removed and FFmpeg finished")
+
+        choice = Initial
+
+        findNavController().popBackStack()
+    }
+
+    private fun concatenateVideoAndUpdateFlag(command: Array<String>) {
+        if (command.contentEquals(lastReverseCommand)) {
+            choice = Concatenate
+            concatVideoCommand()
+        }
+    }
+
+    private fun concatVideoCommand() {
+        val srcDir = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
+
+        if (srcDir.listFiles().size > 1) {
+            Arrays.sort(srcDir.listFiles(), LastModifiedFileComparator.LASTMODIFIED_REVERSE)
+        }
+        val stringBuilder = StringBuilder()
+        val filterComplex = StringBuilder()
+        filterComplex.append("-filter_complex,")
+        srcDir.listFiles().indices.map {
+            stringBuilder.append("-i" + "," + srcDir.listFiles()[it].absolutePath + ",")
+            filterComplex.append("[").append(it).append(":v").append(it).append("] [").append(it)
+                .append(":a").append(it).append("] ")
+        }
+        filterComplex.append("concat=n=").append(srcDir.listFiles().size).append(":v=1:a=1 [v] [a]")
+        val inputCommand = stringBuilder.toString().split(",".toRegex()).toTypedArray()
+        val filterCommand = filterComplex.toString().split(",".toRegex()).toTypedArray()
+        val filePrefix = "reverse_video"
+        val fileExtn = ".mp4"
+        var dest = File(requireContext().filesDir, filePrefix + fileExtn)
+        var fileNo = 0
+        while (dest.exists()) {
+            fileNo++
+            dest = File(requireContext().filesDir, filePrefix + fileNo + fileExtn)
+        }
+        filePath = dest.absolutePath
+        val destinationCommand = arrayOf("-map", "[v]", "-map", "[a]", dest.absolutePath)
+        execFFmpegBinary(inputCommand + filterCommand + destinationCommand)
+    }
+
+    private fun deleteDir(dir: File): Boolean {
+        if (dir.isDirectory) {
+            val children = dir.list()
+            if (children != null) {
+                for (i in children.indices) {
+                    val success = deleteDir(File(dir, children[i]))
+                    if (!success) {
+                        return false
+                    }
+                }
+            }
+        }
+        return dir.delete()
     }
 
     @SuppressLint("MissingPermission")
@@ -364,14 +527,13 @@ class CaptureVideoFragment @Inject constructor(
         handler: Handler? = null
     ): CameraCaptureSession = suspendCoroutine { cont ->
 
-        // Creates a capture session using the predefined targets, and defines a session state
-        // callback which resumes the coroutine once the session is configured
         device.createCaptureSession(targets, object : CameraCaptureSession.StateCallback() {
 
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
 
             override fun onConfigureFailed(session: CameraCaptureSession) {
-                val exc = RuntimeException("Camera ${device.id} session configuration failed")
+                val exc =
+                    RuntimeException("Camera ${device.id} session configuration failed")
                 Log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
@@ -394,6 +556,11 @@ class CaptureVideoFragment @Inject constructor(
         recorderSurface.release()
     }
 
+    private fun createFile(context: Context, extension: String): File {
+        val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+        return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
+    }
+
     companion object {
         const val FLAGS_FULLSCREEN =
             View.SYSTEM_UI_FLAG_LOW_PROFILE or
@@ -401,31 +568,20 @@ class CaptureVideoFragment @Inject constructor(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
 
-        const val ANIMATION_FAST_MILLIS = 50L
-        const val ANIMATION_SLOW_MILLIS = 100L
-        private const val IMMERSIVE_FLAG_TIMEOUT = 500L
-
-        private const val RECORDER_VIDEO_BITRATE: Int = 10_000_000
-        private const val MIN_REQUIRED_RECORDING_TIME_MILLIS: Long = 1000L
-
-        /** Creates a [File] named with the current date and time */
-        private fun createFile(context: Context, extension: String): File {
-            val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
-            return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
-        }
-
-        /** Converts a lens orientation enum into a human-readable string */
-        private fun lensOrientationString(value: Int) = when (value) {
-            CameraCharacteristics.LENS_FACING_BACK -> "Back"
-            CameraCharacteristics.LENS_FACING_FRONT -> "Front"
-            CameraCharacteristics.LENS_FACING_EXTERNAL -> "External"
-            else -> "Unknown"
-        }
-
-        private data class CameraInfo(
-            val cameraId: String,
-            val size: Size,
-            val fps: Int
-        )
     }
 }
+
+private data class CameraInfo(
+    val cameraId: String,
+    val size: Size,
+    val fps: Int
+)
+
+private enum class VideoSteps {
+    Initial,
+    Split,
+    Reverse,
+    Concatenate,
+    End
+}
+

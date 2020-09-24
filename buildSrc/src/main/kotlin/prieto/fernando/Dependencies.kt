@@ -2,8 +2,6 @@ object ProjectModules {
     const val core = ":core"
     const val navigation = ":navigation"
     const val api = ":data-api"
-    const val data = ":data"
-    const val domain = ":domain"
     const val presentation = ":presentation"
     const val coreAndroidTest = ":core-android-test"
 }
@@ -42,9 +40,10 @@ object Versions {
     const val okhttpLoggingInterceptor = "4.2.1"
     const val jodaTime = "2.10.5"
     const val mockWebServer = "4.2.1"
-    const val browser = "1.0.0"
     const val kotlinxCoroutines = "1.3.2"
     const val exoPlayer = "2.12.0"
+    const val ffMpeg = "4.4.LTS"
+    const val commonsIO = "2.5"
 }
 
 object BuildDependencies {
@@ -95,6 +94,10 @@ object Dependencies {
 
     const val exoPlayer = "com.google.android.exoplayer:exoplayer:${Versions.exoPlayer}"
 
+    object FFmpeg {
+        const val ffMpeg = "com.arthenica:mobile-ffmpeg-full-gpl:${Versions.ffMpeg}"
+    }
+
     object Dagger {
         const val dagger =
             "com.google.dagger:dagger:${Versions.dagger}"
@@ -121,6 +124,7 @@ object Dependencies {
 
     const val jodaTime = "joda-time:joda-time:${Versions.jodaTime}"
 
+    const val commonsIO = "commons-io:commons-io:${Versions.commonsIO}"
 }
 
 object TestDependencies {

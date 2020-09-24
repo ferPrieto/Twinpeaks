@@ -27,6 +27,10 @@ android {
             )
         }
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -47,6 +51,9 @@ dependencies {
     implementation(Dependencies.AndroidX.legacySupport)
     implementation(Dependencies.AndroidX.Navigation.fragmentKtx)
     implementation(Dependencies.AndroidX.Navigation.uiKtx)
+
+    implementation(Dependencies.FFmpeg.ffMpeg)
+    implementation(Dependencies.commonsIO)
 
     androidTestImplementation(TestDependencies.AndroidX.runner)
     androidTestImplementation(TestDependencies.AndroidX.rules)
