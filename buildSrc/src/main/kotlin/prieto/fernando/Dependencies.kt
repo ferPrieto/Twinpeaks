@@ -1,9 +1,10 @@
 object ProjectModules {
-    const val core = ":core"
-    const val navigation = ":navigation"
     const val api = ":data-api"
-    const val presentation = ":presentation"
+    const val core = ":core"
     const val coreAndroidTest = ":core-android-test"
+    const val data = ":data"
+    const val navigation = ":navigation"
+    const val presentation =":presentation"
 }
 
 object AndroidSettings {

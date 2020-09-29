@@ -2,16 +2,16 @@ package prieto.fernando.twinpeaks.di
 
 import android.app.Application
 import android.content.Context
-import android.content.res.Resources
 import dagger.Module
 import dagger.Provides
+import fernando.prieto.data.di.AppContext
+import javax.inject.Singleton
 
 @Module
-open class AppModule {
-
+class AppModule(private val application: Application) {
     @Provides
-    fun provideContext(app: Application): Context = app.applicationContext
-
-    @Provides
-    fun provideResources(app: Application): Resources = app.resources
+    @Singleton
+    @AppContext
+    fun provideContext(): Context = application.applicationContext
 }
+

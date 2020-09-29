@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(project(ProjectModules.core))
+    implementation(project(ProjectModules.data))
     implementation(project(ProjectModules.presentation))
     androidTestImplementation(project(ProjectModules.coreAndroidTest))
     testImplementation(project(ProjectModules.coreAndroidTest))
@@ -51,9 +52,6 @@ dependencies {
     implementation(Dependencies.AndroidX.legacySupport)
     implementation(Dependencies.AndroidX.Navigation.fragmentKtx)
     implementation(Dependencies.AndroidX.Navigation.uiKtx)
-
-    implementation(Dependencies.FFmpeg.ffMpeg)
-    implementation(Dependencies.commonsIO)
 
     androidTestImplementation(TestDependencies.AndroidX.runner)
     androidTestImplementation(TestDependencies.AndroidX.rules)

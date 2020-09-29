@@ -2,15 +2,10 @@ package prieto.fernando.twinpeaks.ui
 
 import android.os.Bundle
 import android.view.View
-import android.view.Window
-import android.view.WindowManager
-import android.widget.Toast
 import androidx.fragment.app.FragmentFactory
 import androidx.navigation.Navigation
 import dagger.android.support.DaggerAppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 import prieto.fernando.spacex.R
-import prieto.fernando.twinpeaks.PermissionManager
 import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity() {

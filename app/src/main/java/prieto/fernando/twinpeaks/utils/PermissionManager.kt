@@ -1,4 +1,4 @@
-package prieto.fernando.twinpeaks
+package prieto.fernando.twinpeaks.utils
 
 import android.Manifest
 import android.app.Activity

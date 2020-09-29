@@ -26,7 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
-import com.arthenica.mobileffmpeg.*
+import fernando.prieto.presentation.CaptureVideoViewModel
 import kotlinx.android.synthetic.main.fragment_capture_video.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.view_bottom.*
@@ -34,10 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.apache.commons.io.comparator.LastModifiedFileComparator
-import prieto.fernando.presentation.CaptureVideoViewModel
 import prieto.fernando.spacex.R
-import prieto.fernando.twinpeaks.ui.fragment.VideoSteps.*
 import prieto.fernando.twinpeaks.utils.getPreviewOutputSize
 import java.io.File
 import java.text.SimpleDateFormat
@@ -123,12 +120,6 @@ class CaptureVideoFragment @Inject constructor(
     private val cameraThread = HandlerThread("CameraThread").apply { start() }
 
     private val cameraHandler = Handler(cameraThread.looper)
-
-    private lateinit var lastReverseCommand: Array<String>
-
-    private var choice = Initial
-
-    private var filePath: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -314,181 +305,12 @@ class CaptureVideoFragment @Inject constructor(
                         view.context, arrayOf(outputFile.absolutePath), null, null
                     )
 
-                    choice = Split
-                    splitVideoCommand(outputFile.absolutePath)
+                    viewModel.startVideoProcessing(outputFile.absolutePath)
                 }
             }
 
             true
         }
-    }
-
-    private fun splitVideoCommand(path: String) {
-        val filePrefix = "split_video"
-        val fileExtension = ".mp4"
-        val dir = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
-        if (dir.exists()) deleteDir(dir)
-        dir.mkdir()
-        val dest = File(dir, "$filePrefix%03d$fileExtension")
-        val complexCommand = arrayOf(
-            "-i",
-            path,
-            "-c:v",
-            "libx264",
-            "-crf",
-            "22",
-            "-map",
-            "0",
-            "-segment_time",
-            "6",
-            "-g",
-            "9",
-            "-sc_threshold",
-            "0",
-            "-force_key_frames",
-            "expr:gte(t,n_forced*6)",
-            "-f",
-            "segment",
-            dest.absolutePath
-        )
-        execFFmpegBinary(complexCommand)
-    }
-
-    private fun reverseVideoCommand() {
-        val srcDir = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
-        val filePrefix = "reverse_video"
-        val fileExtension = ".mp4"
-        val destDir = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
-        if (destDir.exists()) deleteDir(destDir)
-        destDir.mkdir()
-        val listFiles = srcDir.listFiles()
-        listFiles.map { file ->
-            val dest = File(destDir, filePrefix + listFiles.indexOf(file) + fileExtension)
-            val command = arrayOf(
-                "-i",
-                file.absolutePath,
-                "-vf",
-                "reverse",
-                "-af",
-                "areverse",
-                dest.absolutePath
-            )
-            if (file == listFiles.last()) lastReverseCommand = command
-            execFFmpegBinary(command)
-        }
-    }
-
-    private fun execFFmpegBinary(command: Array<String>) {
-        Config.setLogLevel(Level.AV_LOG_TRACE)
-
-        Config.enableLogCallback { message: LogMessage -> Log.e(TAG, message.text) }
-
-        Config.enableStatisticsCallback { newStatistics: Statistics ->
-            Log.e(
-                Config.TAG,
-                String.format(
-                    "frame: %d, time: %d",
-                    newStatistics.videoFrameNumber,
-                    newStatistics.time
-                )
-            )
-            Log.d(TAG, "Started command : ffmpeg " + command.contentToString())
-            when (choice) {
-                Split -> Log.d(TAG, "progress : splitting video $newStatistics")
-                Reverse -> Log.d(TAG, "progress : reversing splitted videos $newStatistics")
-                Concatenate -> Log.d(TAG, "progress : concatenating reversed videos $newStatistics")
-                else -> Log.d(TAG, "progress : $newStatistics")
-            }
-            Log.d(TAG, "progress : $newStatistics")
-        }
-        Log.d(TAG, "Started command : ffmpeg $command")
-        val executionId = FFmpeg.executeAsync(
-            command
-        ) { _: Long, returnCode: Int ->
-            if (returnCode == Config.RETURN_CODE_SUCCESS) {
-                Log.d(TAG, "Finished command : ffmpeg " + command.contentToString())
-                when (choice) {
-                    Split -> reverseAndUpdateFlag()
-                    End -> finishCameraScreen()
-                    else -> if (command.contentEquals(lastReverseCommand)) {
-                        concatenateVideoAndUpdateFlag(command)
-                    }
-                }
-            }
-        }
-        Log.e(TAG, "execFFmpegMergeVideo executionId-$executionId")
-    }
-
-    private fun reverseAndUpdateFlag() {
-        choice = Reverse
-        reverseVideoCommand()
-    }
-
-
-    private fun finishCameraScreen() {
-        val reversePath = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
-        val splitPath = File(requireContext().externalMediaDirs.first(), ".VideoSplit")
-
-        if (reversePath.exists()) deleteDir(reversePath)
-        if (splitPath.exists()) deleteDir(splitPath)
-
-        Log.e(TAG, "Directories removed and FFmpeg finished")
-
-        choice = Initial
-
-        findNavController().popBackStack()
-    }
-
-    private fun concatenateVideoAndUpdateFlag(command: Array<String>) {
-        if (command.contentEquals(lastReverseCommand)) {
-            choice = Concatenate
-            concatVideoCommand()
-        }
-    }
-
-    private fun concatVideoCommand() {
-        val srcDir = File(requireContext().externalMediaDirs.first(), ".VideoPartsReverse")
-
-        if (srcDir.listFiles().size > 1) {
-            Arrays.sort(srcDir.listFiles(), LastModifiedFileComparator.LASTMODIFIED_REVERSE)
-        }
-        val stringBuilder = StringBuilder()
-        val filterComplex = StringBuilder()
-        filterComplex.append("-filter_complex,")
-        srcDir.listFiles().indices.map {
-            stringBuilder.append("-i" + "," + srcDir.listFiles()[it].absolutePath + ",")
-            filterComplex.append("[").append(it).append(":v").append(it).append("] [").append(it)
-                .append(":a").append(it).append("] ")
-        }
-        filterComplex.append("concat=n=").append(srcDir.listFiles().size).append(":v=1:a=1 [v] [a]")
-        val inputCommand = stringBuilder.toString().split(",".toRegex()).toTypedArray()
-        val filterCommand = filterComplex.toString().split(",".toRegex()).toTypedArray()
-        val filePrefix = "reverse_video"
-        val fileExtn = ".mp4"
-        var dest = File(requireContext().filesDir, filePrefix + fileExtn)
-        var fileNo = 0
-        while (dest.exists()) {
-            fileNo++
-            dest = File(requireContext().filesDir, filePrefix + fileNo + fileExtn)
-        }
-        filePath = dest.absolutePath
-        val destinationCommand = arrayOf("-map", "[v]", "-map", "[a]", dest.absolutePath)
-        execFFmpegBinary(inputCommand + filterCommand + destinationCommand)
-    }
-
-    private fun deleteDir(dir: File): Boolean {
-        if (dir.isDirectory) {
-            val children = dir.list()
-            if (children != null) {
-                for (i in children.indices) {
-                    val success = deleteDir(File(dir, children[i]))
-                    if (!success) {
-                        return false
-                    }
-                }
-            }
-        }
-        return dir.delete()
     }
 
     @SuppressLint("MissingPermission")
@@ -576,12 +398,3 @@ private data class CameraInfo(
     val size: Size,
     val fps: Int
 )
-
-private enum class VideoSteps {
-    Initial,
-    Split,
-    Reverse,
-    Concatenate,
-    End
-}
-

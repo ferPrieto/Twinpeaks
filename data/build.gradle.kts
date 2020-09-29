@@ -4,14 +4,11 @@ plugins {
 }
 
 dependencies {
-    implementation(project(ProjectModules.data))
-
     api(Dependencies.Dagger.dagger)
     api(Dependencies.Dagger.daggerAndroid)
     api(Dependencies.Dagger.daggerAndroidSupport)
 
-    implementation(Dependencies.AndroidX.Navigation.fragmentKtx)
-    implementation(Dependencies.AndroidX.Navigation.uiKtx)
-    implementation(Dependencies.AndroidX.lifecycleLivedataKtx)
+    implementation(Dependencies.FFmpeg.ffMpeg)
+    implementation(Dependencies.commonsIO)
     implementation(Dependencies.timber)
 }
