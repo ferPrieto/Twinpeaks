@@ -1,5 +1,8 @@
 # Twinpeaks :video_camera::repeat:
 
+The project currently is **stand-by**, waiting for an update from mobile-ffmpeg to sort out the problem on Android 11.
+
+
 #  License
 
     Copyright 2020 Fernando Prieto Moyano

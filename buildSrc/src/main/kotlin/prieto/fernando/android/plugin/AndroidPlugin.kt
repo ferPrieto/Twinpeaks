@@ -56,7 +56,6 @@ open class AndroidPlugin : Plugin<Project> {
         compileSdkVersion(AndroidSettings.compileSdk)
         buildToolsVersion(AndroidSettings.buildTools)
 
-
         defaultConfig {
             versionCode = 1
             versionName = "1.0"
@@ -65,6 +64,15 @@ open class AndroidPlugin : Plugin<Project> {
             targetSdkVersion(AndroidSettings.targetSdk)
 
             testInstrumentationRunner = AndroidSettings.testInstrumentationRunner
+        }
+
+        splits {
+            abi {
+                isEnable = true
+                reset()
+                include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+                isUniversalApk = false
+            }
         }
 
         testOptions {

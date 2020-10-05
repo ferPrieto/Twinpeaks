@@ -4,7 +4,7 @@ object ProjectModules {
     const val coreAndroidTest = ":core-android-test"
     const val data = ":data"
     const val navigation = ":navigation"
-    const val presentation =":presentation"
+    const val presentation = ":presentation"
 }
 
 object AndroidSettings {
@@ -43,7 +43,7 @@ object Versions {
     const val mockWebServer = "4.2.1"
     const val kotlinxCoroutines = "1.3.2"
     const val exoPlayer = "2.12.0"
-    const val ffMpeg = "4.4.LTS"
+    const val ffMpeg = "4.4"
     const val commonsIO = "2.5"
 }
 
@@ -54,7 +54,6 @@ object BuildDependencies {
         "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val navigationSafeArgsPlugin =
         "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.navigation}"
-
 }
 
 object Dependencies {
